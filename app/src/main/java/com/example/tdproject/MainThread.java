@@ -18,22 +18,23 @@ public class MainThread extends Thread {
 
     @Override
     public void run() {
+
         while (running) {
             canvas = null;
-        }
 
-        try {
-            canvas = this.surfaceHolder.lockCanvas();
-            synchronized(surfaceHolder) {
-                this.gameView.update();
-                this.gameView.draw(canvas);
-            }
-        } catch (Exception e) {} finally {
-            if (canvas != null) {
-                try {
-                    surfaceHolder.unlockCanvasAndPost(canvas);
-                } catch (Exception e) {
-                    e.printStackTrace();
+            try {
+                canvas = this.surfaceHolder.lockCanvas();
+                synchronized(surfaceHolder) {
+                    this.gameView.update();
+                    this.gameView.draw(canvas);
+                }
+            } catch (Exception e) {} finally {
+                if (canvas != null) {
+                    try {
+                        surfaceHolder.unlockCanvasAndPost(canvas);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
