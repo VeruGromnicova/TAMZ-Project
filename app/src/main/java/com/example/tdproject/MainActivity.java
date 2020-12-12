@@ -3,6 +3,8 @@ package com.example.tdproject;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
@@ -17,5 +19,6 @@ public class MainActivity extends Activity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         //setContentView(R.layout.activity_main);
         setContentView(new GameView(this));
+        //SharedPreferences sp = this.getPreferences(Context.MODE_PRIVATE);
     }
 }

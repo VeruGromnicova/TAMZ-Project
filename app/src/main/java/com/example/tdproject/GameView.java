@@ -2,6 +2,7 @@ package com.example.tdproject;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -24,11 +25,16 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.Context.MODE_PRIVATE;
+
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public MainThread thread;
+    public static SharedPreferences sp;
     Bitmap[] bmp;
+    Bitmap[] bmpMaps;
+    Bitmap[] bmpMapsWork;
     Paint[] paints;
     Path enemyMove;
     int width;
@@ -62,6 +68,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int level;
     private boolean win;
     private boolean gameOver;
+    private boolean bestScores;
     private long lastDraw;
     private long firstDraw;
     private long pause;
@@ -78,6 +85,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         getHolder().addCallback(this);
         thread = new MainThread(getHolder(), this);
         setFocusable(true);
+        sp = this.context.getSharedPreferences("keys", Context.MODE_PRIVATE);
 
         this.menu = true;
         this.screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
@@ -91,7 +99,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.pricesTower = new int[3];
         this.pricesTower[0] = 40;
         this.pricesTower[1] = 60;
-        this.pricesTower[2] = 50;
+        this.pricesTower[2] = 70;
         this.unitWidth = (int)(screenWidth/80);
         this.unitHeight = (int)(screenHeight/80);
         this.barHeight = unitHeight*12;
@@ -108,6 +116,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         init(context);
         loadMaps();
     }
+
+    /*
+    SharedPreferences.Editor editor = sharedPreferences.edit();
+    editor.putString(keyString, valueString);
+    editor.commit();
+     */
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -128,7 +142,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 pros.get(i).update();
             }
         }
-
     }
 
     @Override
@@ -162,7 +175,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawBitmap(bmp[9], 22*unitWidth, 55*unitHeight, null);
             canvas.drawBitmap(bmp[9], 22*unitWidth, 64*unitHeight, null);
 
-            canvas.drawText("Levels:", 30*unitWidth, 10*unitHeight, paints[5]);
+            canvas.drawText("Levels:", 33*unitWidth, 10*unitHeight, paints[5]);
             canvas.drawBitmap(bmp[10], 15*unitWidth, 15*unitHeight, null);
             canvas.drawBitmap(bmp[10], 35*unitWidth, 15*unitHeight, null);
             canvas.drawBitmap(bmp[10], 55*unitWidth, 15*unitHeight, null);
@@ -176,18 +189,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         else if (gameOver) {
             canvas.drawBitmap(bmp[8], 0,0, null);
-            canvas.drawText("Game Over!", 10*unitWidth, 25*unitHeight, paints[6]);
+            canvas.drawText("Game Over!", 18*unitWidth, 25*unitHeight, paints[6]);
             canvas.drawBitmap(bmp[9], 22*unitWidth, 35*unitHeight, null);
             canvas.drawBitmap(bmp[9], 22*unitWidth, 45*unitHeight, null);
         }
         else if (win) {
             canvas.drawBitmap(bmp[8], 0,0, null);
-            canvas.drawText("You won!", 18*unitWidth, 25*unitHeight, paints[7]);
+            canvas.drawText("You won!", 22*unitWidth, 25*unitHeight, paints[7]);
             canvas.drawBitmap(bmp[9], 22*unitWidth, 35*unitHeight, null);
             canvas.drawBitmap(bmp[9], 22*unitWidth, 45*unitHeight, null);
         }
+        else if (bestScores) {
+            canvas.drawBitmap(bmp[8], 0,0, null);
+            canvas.drawText("Level 1:", 10*unitWidth, 25*unitHeight, paints[12]);
+        }
         else {
-            canvas.drawBitmap(bmp[0], null, new Rect(0, 0, screenWidth, mapHeight), null);
+            canvas.drawBitmap(bmpMaps[level-1], null, new Rect(0, 0, screenWidth, mapHeight), null);
             canvas.drawBitmap(bmp[11], 10, 10, null);
 
             if (System.currentTimeMillis() - this.lastDraw > 1000 && ships.size() < shipsCount && System.currentTimeMillis() - this.firstDraw > this.pause) {
@@ -197,8 +214,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     this.firstDraw = System.currentTimeMillis();
                     this.pause = 4000;
                     delay++;
-
-                    System.out.println("T");
                 }
 
                 switch (shipSeq.get(level-1).charAt(ships.size())){
@@ -237,9 +252,27 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawText(Integer.toString(this.coins), coinHeartTextSize+25, mapHeight+coinHeartTextSize-5, paints[1]);
             canvas.drawBitmap(bmp[4], 5, mapHeight+coinHeartTextSize+15 , null);
             canvas.drawText(Integer.toString(this.hearts), coinHeartTextSize+25, mapHeight+(2*coinHeartTextSize)+5, paints[1]);
+
             canvas.drawBitmap(bmp[5], screenWidth-(int)(screenWidth/9)-coinHeartTextSize, screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[2]);
-            canvas.drawBitmap(bmp[5], screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[3]);
-            canvas.drawBitmap(bmp[5], screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[4]);
+            canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[3]);
+            canvas.drawBitmap(bmp[14], screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[4]);
+
+            //canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[9]);
+            //canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[10]);
+            //canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[11]);
+
+            canvas.drawText(Integer.toString(pricesTower[0]), screenWidth-(int)(screenWidth/9)-(int)(coinHeartTextSize/2),screenHeight-30, paints[8]);
+            canvas.drawText(Integer.toString(pricesTower[1]), screenWidth-(int)(screenWidth/9)-(int)(3.5*coinHeartTextSize),screenHeight-30, paints[8]);
+            canvas.drawText(Integer.toString(pricesTower[2]), screenWidth-(int)(screenWidth/9)-(int)(6.5*coinHeartTextSize),screenHeight-30, paints[8]);
+            canvas.drawBitmap(bmp[12], screenWidth-(int)(screenWidth/9)+coinHeartTextSize/4, screenHeight-65 , null);
+            canvas.drawBitmap(bmp[12], screenWidth-(int)(screenWidth/9)-(int)(2.75*coinHeartTextSize), screenHeight-65 , null);
+            canvas.drawBitmap(bmp[12], screenWidth-(int)(screenWidth/9)-(int)(5.75*coinHeartTextSize), screenHeight-65 , null);
+
+
+            if (System.currentTimeMillis() - this.firstDraw < this.pause && delay == 0) {
+                canvas.drawText("Remaining: " + Long.toString((this.pause - (System.currentTimeMillis() - this.firstDraw))/1000) + " s", 20, screenHeight-30, paints[8]);
+                System.out.println(Long.toString((this.pause - (System.currentTimeMillis() - this.firstDraw))/1000));
+            }
         }
     }
 
@@ -262,8 +295,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     restartGame(1);
                 }
                 else if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 55*unitHeight && displayY < 61*unitHeight) {
-                    System.out.println("start");
-
+                    System.out.println("best scores");
+                    this.bestScores = true;
+                    this.menu = false;
                 }
                 else if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 64*unitHeight && displayY < 70*unitHeight) {
                     System.out.println("quit");
@@ -283,11 +317,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     System.out.println("level 1");
                 }
                 else if (displayX > 35*unitWidth && displayX < 48*unitWidth && displayY > 15*unitHeight && displayY < 21*unitHeight) {
-                    //restartGame(1);
+                    restartGame(2);
                     System.out.println("level 2");
                 }
                 else if (displayX > 55*unitWidth && displayX < 68*unitWidth && displayY > 15*unitHeight && displayY < 21*unitHeight) {
-                    //restartGame(1);
+                    restartGame(3);
                     System.out.println("level 3");
                 }
             }
@@ -329,14 +363,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                     menu = true;
                 }
                 if (displayY <= mapHeight && selectedTower >= 0) {
-                    if ((bmp[2].getPixel(mapX, mapY) != Color.BLACK) && coins >= pricesTower[selectedTower] ) {
-                        towers.add(new Tower(this, bmp[6], (int)displayX - towerSize/2, (int)displayY - towerSize/2, selectedTower, pricesTower[selectedTower]));
+                    if ((bmp[0].getPixel(mapX, mapY) != Color.BLACK) && coins >= pricesTower[selectedTower] ) {
+                        int indexBmp = -1;
+                        if (selectedTower == 0) indexBmp = 1;
+                        else if (selectedTower == 1) indexBmp = 2;
+                        else if (selectedTower == 2) indexBmp = 6;
+
+                        towers.add(new Tower(this, bmp[indexBmp], (int)displayX - towerSize/2, (int)displayY - towerSize/2, selectedTower, pricesTower[selectedTower]));
                         paints[2].setAlpha(255); paints[3].setAlpha(255); paints[4].setAlpha(255);
                         selectedTower = -1;
                         for (int i = mapX - towerSize; i < mapX + towerSize; i++) {
                             for (int j = mapY - towerSize; j < mapY + towerSize; j++) {
                                 if (i >= 0 && j >= 0 && i < getResources().getDrawable(R.drawable.map1).getIntrinsicWidth() && j < getResources().getDrawable(R.drawable.map1).getIntrinsicHeight()) {
-                                    bmp[2].setPixel(i, j, Color.BLACK);
+                                    bmp[0].setPixel(i, j, Color.BLACK);
                                 }
                             }
                         }
@@ -347,6 +386,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         paints[2].setAlpha(140);
                         paints[3].setAlpha(255);
                         paints[4].setAlpha(255);
+                        //paints[9].setAlpha(100);
+                        //paints[10].setAlpha(0);
+                        //paints[11].setAlpha(0);
                         selectedTower = 0;
                     }
                     else if (displayX > screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize) && displayX < screenWidth-(int)(screenWidth/9)-(2*coinHeartTextSize) &&
@@ -354,6 +396,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         paints[2].setAlpha(255);
                         paints[3].setAlpha(140);
                         paints[4].setAlpha(255);
+                        //paints[9].setAlpha(0);
+                        //paints[10].setAlpha(100);
+                        //paints[11].setAlpha(0);
                         selectedTower = 1;
                     }
                     else if (displayX > screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize) && displayX < screenWidth-(int)(screenWidth/9)-(5*coinHeartTextSize) &&
@@ -361,6 +406,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         paints[2].setAlpha(255);
                         paints[3].setAlpha(255);
                         paints[4].setAlpha(140);
+                        //paints[9].setAlpha(0);
+                        //paints[10].setAlpha(0);
+                        //paints[11].setAlpha(100);
                         selectedTower = 2;
                     }
                 }
@@ -370,21 +418,44 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     void init(Context context) {
-        bmp = new Bitmap[13];
-        bmp[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1), screenWidth, mapHeight, false); // Colored
-        bmp[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1work), screenWidth, mapHeight, false); // Working
-        bmp[2] = bmp[1].copy(bmp[1].getConfig(), true);
+        bmp = new Bitmap[20];
+        bmpMaps = new Bitmap[3];
+        bmpMapsWork = new Bitmap[3];
+        bmpMaps[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[0]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[1]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[2] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[2]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3work), screenWidth, mapHeight, false); // Working
+
+        bmp[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower3), towerSize, towerSize, false);
+        bmp[2] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower1), towerSize, towerSize, false);
+        bmp[6] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower2), towerSize, towerSize, false);
+
         bmp[3] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.coin), coinHeartTextSize, coinHeartTextSize, false);
         bmp[4] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.heart), coinHeartTextSize, coinHeartTextSize, false);
-        bmp[5] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.bug), 2*coinHeartTextSize, 2*coinHeartTextSize, false);
-        bmp[6] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.bug), towerSize, towerSize, false);
-        bmp[7] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ship), shipWidth, shipHeight, false);
+
+        bmp[5] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower3), 2*coinHeartTextSize, 2*coinHeartTextSize, false);
+        bmp[13] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower1), 2*coinHeartTextSize, 2*coinHeartTextSize, false);
+        bmp[14] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower2), 2*coinHeartTextSize, 2*coinHeartTextSize, false);
+
+        bmp[7] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ship1), shipWidth, shipHeight, false);
+        bmp[15] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ship2), shipWidth, shipHeight, false);
+        bmp[16] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ship3), shipWidth, shipHeight, false);
+        bmp[17] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.boss), shipWidth, shipHeight, false);
+
         bmp[8] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.menubg), screenWidth, screenHeight, false);
         bmp[9] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttmenu), 40*unitWidth, 6*unitHeight, false);
         bmp[10] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttlevel), 13*unitWidth, 6*unitHeight, false);
         bmp[11] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.menuicon), 8*unitWidth, 8*unitWidth, false);
+        bmp[12] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.coin), coinHeartTextSize/2, coinHeartTextSize/2, false);
+        //bmp[13] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.circle1), 180*2, 180*2, false);
 
-        paints = new Paint[8];
+        Typeface typeface = Typeface.createFromAsset(context.getAssets(), "fonts/Mintmolly.ttf");
+
+        paints = new Paint[15];
         paints[0] = new Paint();
         paints[1] = new Paint();
         paints[2] = new Paint();
@@ -393,27 +464,42 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         paints[5] = new Paint();
         paints[6] = new Paint();
         paints[7] = new Paint();
+        paints[8] = new Paint();
+        paints[9] = new Paint();
+        paints[10] = new Paint();
+        paints[11] = new Paint();
+        paints[12] = new Paint();
 
         paints[0].setColor(Color.BLUE);
         paints[1].setColor(Color.BLACK);
         paints[1].setTextSize(coinHeartTextSize);
         paints[5].setTextSize((int)(1.3 * coinHeartTextSize));
         paints[5].setColor(Color.WHITE);
-        paints[5].setTypeface(Typeface.SANS_SERIF);
+        paints[5].setTypeface(typeface);
         paints[6].setTextSize(2*coinHeartTextSize);
         paints[6].setColor(Color.RED);
-        paints[6].setTypeface(Typeface.SANS_SERIF);
-        paints[6].setTypeface(Typeface.DEFAULT_BOLD);
+        paints[6].setTypeface(typeface);
+        //paints[6].setTypeface(Typeface.DEFAULT_BOLD);
         paints[7].setColor(Color.GREEN);
         paints[7].setTextSize(2*coinHeartTextSize);
-        paints[7].setTypeface(Typeface.SANS_SERIF);
-        paints[7].setTypeface(Typeface.DEFAULT_BOLD);
+        paints[7].setTypeface(typeface);
+        //paints[7].setTypeface(Typeface.DEFAULT_BOLD);
+        paints[8].setColor(Color.BLACK);
+        paints[8].setTextSize((int)(coinHeartTextSize*0.6));
+        //paints[9].setAlpha(0);
+        //paints[10].setAlpha(0);
+        //paints[11].setAlpha(0);
+
+
+
+        paints[12].setColor(Color.WHITE);
+        paints[12].setTextSize((int)(coinHeartTextSize));
+        paints[12].setTypeface(typeface);
+
     }
 
     public void loadMaps() {
 
-//        float pathRatioX = (float)getResources().getDrawable(R.drawable.map1).getIntrinsicWidth() / 400;
-//        float pathRatioY = (float)getResources().getDrawable(R.drawable.map1).getIntrinsicHeight() / 600;
         float pathRatioX = (float)screenWidth / 400;
         float pathRatioY = (float)screenHeight / 600;
 
@@ -491,6 +577,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void restartGame(int level) {
+        bmp[0] = bmpMapsWork[level - 1].copy(bmpMapsWork[level - 1].getConfig(), true);
         this.towers = new ArrayList<Tower>();
         this.ships = new ArrayList<Ship>();
         //this.paths = new ArrayList<Path>();
@@ -499,13 +586,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.level = level;
         this.hearts = 15;
         if (level == 1) {
-            this.coins = 100;
-        }
-        else if (level == 2) {
             this.coins = 120;
         }
-        else {
+        else if (level == 2) {
             this.coins = 150;
+        }
+        else {
+            this.coins = 200;
         }
         this.lastDraw = System.currentTimeMillis();
         this.firstDraw = System.currentTimeMillis();
@@ -532,23 +619,3 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
 }
-
-/*
-* Odpocet
-* menu ikonka
-* prepinani mezi levely
-*
-*    new CountDownTimer(10000, 1000) {
-
-        public void onTick(long millisUntilFinished) {
-
-            //time = "seconds remaining: " + millisUntilFinished / 1000;
-        }
-
-        public void onFinish() {
-            //mTextField.setText("done!");
-        }
-    }.start();
-*
-*
-* */
