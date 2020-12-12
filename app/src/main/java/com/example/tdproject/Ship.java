@@ -19,12 +19,12 @@ public class Ship {
     private int x,y;
     private int iCurStep = 0;
     private Path shipPath;
-    private int speed = 600;
+    private int speed;
     private Canvas canvas;
     private GameView gv;
     private String direction = "N";
     private int lives = 5;
-    private int reward = 30;
+    private int reward;
     private int damage = 1;
     private boolean active = true;
     private PathMeasure pm;
@@ -43,23 +43,28 @@ public class Ship {
         // Move
 
         if (type == 0) {
-            reward = 30;
+            reward = 20;
             damage = 1;
             lives = 5;
+            speed = 800;
         }
         else if (type == 1) {
-            reward = 40;
+            reward = 30;
             damage = 1;
             lives = 7;
+            speed = 800;
         }
         else if (type == 2) {
-            reward = 50;
+            reward = 40;
             damage = 3;
             lives = 7;
+            speed = 800;
         }
         else {
+            reward = 0;
             lives = 30;
             damage = 5;
+            speed = 1400;
         }
         pm = new PathMeasure(shipPath, false);
         fSegmentLen = pm.getLength() / this.speed;//we'll get 20 points from path to animate the circle
