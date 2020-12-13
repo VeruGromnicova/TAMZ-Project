@@ -31,16 +31,16 @@ public class Tower {
         this.lastFire = System.currentTimeMillis();
 
         if (this.type == 0) {
-            this.maxlen = 180;
-            this.fireDelay = 800;
+            this.maxlen = 200;
+            this.fireDelay = 900;
         }
         else if (this.type == 1) {
-            this.maxlen = 210;
-            this.fireDelay = 600;
+            this.maxlen = 230;
+            this.fireDelay = 700;
         }
         else {
-            this.maxlen = 200;
-            this.fireDelay = 400;
+            this.maxlen = 220;
+            this.fireDelay = 500;
         }
 
         this.gv.decreaseCoins(price);

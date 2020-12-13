@@ -13,6 +13,10 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.os.CountDownTimer;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -38,10 +42,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     Bitmap[] bmpMapsWork;
     Bitmap[] bmpBtns;
     Paint[] paints;
-    Path enemyMove;
     int width;
     int height;
-    private Tower tower;
     private ArrayList<Tower> towers;
     private ArrayList<Ship> ships;
     private ArrayList<Path> paths;
@@ -79,8 +81,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int delay;
     private int activeShips;
     private String playTime;
-    SharedPreferences.Editor editor;
+    private SharedPreferences.Editor editor;
     private boolean newRecord;
+    private SoundPool sounds;
+    private int winSound;
+    private int gameOverSound;
+    private MediaPlayer mediaPlayer;
+    private int availableLevels;
+
 
     private int[] map = {
 
@@ -104,9 +112,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.shipSeq = new ArrayList<String>();
         this.delays = new ArrayList<String[]>();
         this.pricesTower = new int[3];
-        this.pricesTower[0] = 40;
-        this.pricesTower[1] = 60;
-        this.pricesTower[2] = 70;
+        this.pricesTower[0] = 50;
+        this.pricesTower[1] = 80;
+        this.pricesTower[2] = 120;
         this.unitWidth = (int)(screenWidth/80);
         this.unitHeight = (int)(screenHeight/80);
         this.barHeight = unitHeight*12;
@@ -116,15 +124,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.towerSize = unitWidth*8;
         this.coinHeartTextSize = unitWidth*6;
         this.menu = true;
-        this.ratioX = (float)(screenWidth) / (float)getResources().getDrawable(R.drawable.map1).getIntrinsicWidth();
-        this.ratioY = (float)(mapHeight) / (float)getResources().getDrawable(R.drawable.map1).getIntrinsicHeight();
+        this.ratioX = (float)(screenWidth) / (float)getResources().getDrawable(R.drawable.map1x).getIntrinsicWidth();
+        this.ratioY = (float)(mapHeight) / (float)getResources().getDrawable(R.drawable.map1x).getIntrinsicHeight();
         this.activeShips = 0;
         this.editor = sp.edit();
         this.newRecord = false;
+        this.availableLevels = sp.getInt("availableLevels", 1);
+
+        sounds = new SoundPool(10, AudioManager.STREAM_MUSIC,0);
+        winSound = sounds.load(context, R.raw.win, 1);
+        gameOverSound = sounds.load(context, R.raw.gameover, 1);
+
+
+        mediaPlayer = MediaPlayer.create(context, R.raw.bgmusic);
+        mediaPlayer.setLooping(true);
 
         //restartGame(1);
         init(context);
         loadMaps();
+
     }
 
     /*
@@ -139,17 +157,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
-        for (int i = 0; i < towers.size(); i++) {
-            towers.get(i).update();
-        }
-        for (int i = 0; i < ships.size(); i++) {
-            if (ships.get(i).isActive()) {
-                ships.get(i).update();
+        if (!gameOver) {
+            for (int i = 0; i < towers.size(); i++) {
+                towers.get(i).update();
             }
-        }
-        for (int i = 0; i < pros.size(); i++) {
-            if (pros.get(i).isActive()) {
-                pros.get(i).update();
+            for (int i = 0; i < ships.size(); i++) {
+                if (ships.get(i).isActive()) {
+                    ships.get(i).update();
+                }
+            }
+            for (int i = 0; i < pros.size(); i++) {
+                if (pros.get(i).isActive()) {
+                    pros.get(i).update();
+                }
             }
         }
     }
@@ -172,7 +192,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(SurfaceHolder holder) {
         thread.setRunning(true);
         thread.start();
-        //ship1 = new Ship1(BitmapFactory.decodeResource(getResources(), R.drawable.ship));
+        mediaPlayer.start();
     }
 
     @Override
@@ -186,16 +206,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawBitmap(bmpBtns[11], 22*unitWidth, 64*unitHeight, null);
 
             canvas.drawText("Levels:", 33*unitWidth, 10*unitHeight, paints[5]);
-            canvas.drawBitmap(bmpBtns[0], 15*unitWidth, 15*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[1], 35*unitWidth, 15*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[2], 55*unitWidth, 15*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[3], 15*unitWidth, 24*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[4], 35*unitWidth, 24*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[5], 55*unitWidth, 24*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[6], 15*unitWidth, 33*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[7], 35*unitWidth, 33*unitHeight, null);
-            canvas.drawBitmap(bmpBtns[8], 55*unitWidth, 33*unitHeight, null);
 
+            int row = -1;
+            int column;
+
+            for (int i = 0; i < 9; i++) {
+                column = i % 3;
+                if (i % 3 == 0) {
+                    row++;
+                }
+                if (i < availableLevels) {
+                    canvas.drawBitmap(bmpBtns[i], 15*unitWidth + 20*column*unitWidth, 15*unitHeight + 9*row*unitHeight, null);
+                }
+                else{
+                    canvas.drawBitmap(bmpBtns[15], 15*unitWidth + 20*column*unitWidth, 15*unitHeight + 9*row*unitHeight, null);
+                }
+            }
         }
         else if (gameOver) {
             canvas.drawBitmap(bmp[8], 0,0, null);
@@ -205,37 +231,40 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         else if (win) {
             canvas.drawBitmap(bmp[8], 0,0, null);
-            canvas.drawText("You won!", 22*unitWidth, 25*unitHeight, paints[7]);
+            canvas.drawText("You won!", 24*unitWidth, 25*unitHeight, paints[7]);
             canvas.drawBitmap(bmpBtns[12], 22*unitWidth, 40*unitHeight, null);
             canvas.drawBitmap(bmpBtns[14], 22*unitWidth, 50*unitHeight, null);
             canvas.drawText("Time: " + playTime, 29*unitWidth, 32*unitHeight, paints[12]);
 
             if (newRecord) {
-                canvas.drawText("New record", 22*unitWidth, 60*unitHeight, paints[13]);
+                canvas.drawText("New record", 25*unitWidth, 70*unitHeight, paints[13]);
             }
         }
         else if (bestScores) {
             canvas.drawBitmap(bmp[8], 0,0, null);
-            canvas.drawText("Level 1", 10*unitWidth, 15*unitHeight, paints[12]);
-            canvas.drawText("Level 2", 10*unitWidth, 35*unitHeight, paints[12]);
-            canvas.drawText("Level 3", 10*unitWidth, 55*unitHeight, paints[12]);
-            for (int i = 0; i < paths.size(); i++) {
-                canvas.drawText("Lives: " + scoreList.get(i)[0], 15*unitWidth, (i+1)*20*unitHeight, paints[14]);
-                canvas.drawText("Time: " + scoreList.get(i)[1], 15*unitWidth, (i+1)*23*unitHeight, paints[14]);
-                canvas.drawText("Coins: " + scoreList.get(i)[2], 15*unitWidth, (i+1)*26*unitHeight, paints[14]);
+
+            canvas.drawBitmap(bmpBtns[14], 22*unitWidth, 71*unitHeight, null);
+
+            for (int i = 0; i < paths.size()-1; i++) {
+                canvas.drawText("Level " + (i+1), 10*unitWidth, 5*unitHeight + (8*i*unitHeight), paints[12]);
+
+                if (scoreList.get(i)[0] != "") {
+                    canvas.drawText("Lives: " + scoreList.get(i)[0] + ",  " + "Coins: " + scoreList.get(i)[2] + ",  " + "Time: " + scoreList.get(i)[1] , 15*unitWidth, 8*unitHeight + (8*i)*unitHeight, paints[14]);
+                }
             }
 
         }
         else {
             canvas.drawBitmap(bmpMaps[level-1], null, new Rect(0, 0, screenWidth, mapHeight), null);
             canvas.drawBitmap(bmp[11], 10, 10, null);
+            canvas.drawText("Level " + Integer.toString(this.level), screenWidth-220, 65, paints[1]);
 
-            if (System.currentTimeMillis() - this.lastDraw > 1000 && ships.size() < shipsCount && System.currentTimeMillis() - this.firstDraw > this.pause) {
+            if (System.currentTimeMillis() - this.lastDraw > 1500 && ships.size() < shipsCount && System.currentTimeMillis() - this.firstDraw > this.pause) {
 
                 this.lastDraw = System.currentTimeMillis();
                 if (Integer.parseInt(delays.get(level-1)[delay].trim()) == ships.size()){
                     this.firstDraw = System.currentTimeMillis();
-                    this.pause = 4000;
+                    this.pause = 5000;
                     delay++;
                 }
 
@@ -253,7 +282,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         ships.add(new Ship(this, bmp[17], paths.get(level - 1), 3));
                         break;
                 }
-                activeShips++;
+                //activeShips++;
             }
 
             for(int i = 0; i < towers.size(); i++) {
@@ -270,7 +299,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
 
-            canvas.drawRect(0, mapHeight, screenWidth, screenHeight, paints[0]);
+            //canvas.drawRect(0, mapHeight, screenWidth, screenHeight, paints[0]);
+            canvas.drawBitmap(bmp[9], 0, mapHeight, null);
             canvas.drawBitmap(bmp[3], 5, mapHeight+5 , null);
             canvas.drawText(Integer.toString(this.coins), coinHeartTextSize+25, mapHeight+coinHeartTextSize-5, paints[1]);
             canvas.drawBitmap(bmp[4], 5, mapHeight+coinHeartTextSize+15 , null);
@@ -294,7 +324,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
             if (System.currentTimeMillis() - this.firstDraw < this.pause && delay == 0) {
                 canvas.drawText("Remaining: " + Long.toString((this.pause - (System.currentTimeMillis() - this.firstDraw))/1000) + " s", 20, screenHeight-30, paints[8]);
-                System.out.println(Long.toString((this.pause - (System.currentTimeMillis() - this.firstDraw))/1000));
+                //System.out.println(Long.toString((this.pause - (System.currentTimeMillis() - this.firstDraw))/1000));
             }
 
         }
@@ -314,9 +344,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         if (menu) {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 46*unitHeight && displayY < 52*unitHeight) {
+                if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 46*unitHeight && displayY < 52*unitHeight) { //
                     System.out.println("reset");
                     restartGame(1);
+                    availableLevels = 1;
+                    editor.putInt("availableLevels", availableLevels);
+                    editor.commit();
+                    for (int i = 0; i < 9; i++) {
+                        editor.putString("level" + (i+1), "");
+                        editor.commit();
+                    }
                 }
                 else if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 55*unitHeight && displayY < 61*unitHeight) {
                     System.out.println("best scores");
@@ -326,38 +363,45 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         if (parseRecord(i)[0].trim() != "") {
                             this.scoreList.get(i-1)[1] = getPlayTime(Long.parseLong(scoreList.get(i-1)[1]));
                         }
-
                     }
-                    //canvas.drawText("Time: " + getPlayTime(Long.parseLong(scoreList.get(i)[1])), 10*unitWidth, (i+1)*20*unitHeight, paints[12]);
                     this.bestScores = true;
                     this.menu = false;
                 }
-                else if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 64*unitHeight && displayY < 70*unitHeight) {
-                    System.out.println("quit");
-                    /*
-                    Intent intent = new Intent(Intent.ACTION_MAIN);
-                    intent.addCategory(Intent.CATEGORY_HOME);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);*/
+                else if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 64*unitHeight && displayY < 70*unitHeight) { //QUIT
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                    System.exit(1);
                 }
-                /*
-                *   canvas.drawBitmap(bmp[10], 15*unitWidth, 15*unitHeight, null);
-                    canvas.drawBitmap(bmp[10], 35*unitWidth, 15*unitHeight, null);
-                    canvas.drawBitmap(bmp[10], 55*unitWidth, 15*unitHeight, null);
-                * */
                 else if (displayX > 15*unitWidth && displayX < 28*unitWidth && displayY > 15*unitHeight && displayY < 21*unitHeight) {
                     restartGame(1);
-                    System.out.println("level 1");
                 }
                 else if (displayX > 35*unitWidth && displayX < 48*unitWidth && displayY > 15*unitHeight && displayY < 21*unitHeight) {
                     gameOver = false;
                     restartGame(2);
-                    System.out.println("level 2");
                 }
                 else if (displayX > 55*unitWidth && displayX < 68*unitWidth && displayY > 15*unitHeight && displayY < 21*unitHeight) {
                     restartGame(3);
-                    System.out.println("level 3");
                 }
+                else if (displayX > 15*unitWidth && displayX < 68*unitWidth && displayY > 24*unitHeight && displayY < 30*unitHeight) {
+                    restartGame(4);
+                }
+                else if (displayX > 35*unitWidth && displayX < 68*unitWidth && displayY > 24*unitHeight && displayY < 30*unitHeight) {
+                    restartGame(5);
+                }
+                else if (displayX > 55*unitWidth && displayX < 68*unitWidth && displayY > 24*unitHeight && displayY < 30*unitHeight) {
+                    restartGame(6);
+                }
+                else if (displayX > 15*unitWidth && displayX < 68*unitWidth && displayY > 33*unitHeight && displayY < 39*unitHeight) {
+                    restartGame(7);
+                }
+                else if (displayX > 35*unitWidth && displayX < 68*unitWidth && displayY > 33*unitHeight && displayY < 39*unitHeight) {
+                    restartGame(8);
+                }
+                else if (displayX > 55*unitWidth && displayX < 68*unitWidth && displayY > 33*unitHeight && displayY < 39*unitHeight) {
+                    restartGame(9);
+                }
+                /*
+                !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                 */
             }
         }
         else if (gameOver) {
@@ -386,6 +430,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 else if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 50*unitHeight && displayY < 56*unitHeight) {
                     menu = true;
                     win = false;
+                }
+            }
+        }
+        else if (bestScores) {
+            //22*unitWidth, 75*unitHeight
+
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                if (displayX > 22*unitWidth && displayX < 62*unitWidth && displayY > 71*unitHeight && displayY < 77*unitHeight) {
+                    bestScores = false;
+                    menu = true;
                 }
             }
         }
@@ -453,17 +507,35 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     void init(Context context) {
         bmp = new Bitmap[20];
-        bmpMaps = new Bitmap[3];
-        bmpMapsWork = new Bitmap[3];
-        bmpBtns = new Bitmap[15];
-        bmpMaps[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1), screenWidth, mapHeight, false); // Colored
+        bmpMaps = new Bitmap[10];
+        bmpMapsWork = new Bitmap[10];
+        bmpBtns = new Bitmap[16];
+        bmpMaps[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1x), screenWidth, mapHeight, false); // Colored
         bmpMapsWork[0]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1work), screenWidth, mapHeight, false); // Working
 
-        bmpMaps[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2), screenWidth, mapHeight, false); // Colored
+        bmpMaps[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2x), screenWidth, mapHeight, false); // Colored
         bmpMapsWork[1]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2work), screenWidth, mapHeight, false); // Working
 
-        bmpMaps[2] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3), screenWidth, mapHeight, false); // Colored
+        bmpMaps[2] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3x), screenWidth, mapHeight, false); // Colored
         bmpMapsWork[2]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[3] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map4x), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[3]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map4work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[4] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map5x), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[4]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map5work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[5] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1x), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[5]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map1work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[6] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2x), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[6]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map2work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[7] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3x), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[7]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map3work), screenWidth, mapHeight, false); // Working
+
+        bmpMaps[8] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map4x), screenWidth, mapHeight, false); // Colored
+        bmpMapsWork[8]  = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.map4work), screenWidth, mapHeight, false); // Working
 
         bmp[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower2), towerSize, towerSize, false);
         bmp[2] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.tower3), towerSize, towerSize, false);
@@ -483,6 +555,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         bmp[8] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.menubg), screenWidth, screenHeight, false);
 
+        bmp[9] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.bar), screenWidth, barHeight, false);
+
         bmpBtns[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttlevel1), 13*unitWidth, 6*unitHeight, false);
         bmpBtns[1] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttlevel2), 13*unitWidth, 6*unitHeight, false);
         bmpBtns[2] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttlevel3), 13*unitWidth, 6*unitHeight, false);
@@ -499,6 +573,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         bmpBtns[12] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttmenunext), 40*unitWidth, 6*unitHeight, false);
         bmpBtns[13] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttmenurestart), 40*unitWidth, 6*unitHeight, false);
         bmpBtns[14] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttmenu), 40*unitWidth, 6*unitHeight, false);
+        bmpBtns[15] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttlevellock), 13*unitWidth, 6*unitHeight, false);
 
         bmp[11] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.menuicon), 8*unitWidth, 8*unitWidth, false);
         bmp[12] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.coin), coinHeartTextSize/2, coinHeartTextSize/2, false);
@@ -632,6 +707,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void decreaseHearts(int sum) {
         hearts -= sum;
         if(hearts < 1){
+            sounds.play(gameOverSound, 1.0f, 1.0f, 0, 0, 1.5f);
             gameOver = true;
         }
     }
@@ -644,15 +720,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.pros = new ArrayList<Projectile>();
         this.selectedTower = -1;
         this.level = level;
-        this.hearts = 15;
+        this.hearts = 5;
         if (level == 1) {
-            this.coins = 120;
+            this.coins = 100;
         }
         else if (level == 2) {
-            this.coins = 150;
+            this.coins = 120;
         }
         else {
-            this.coins = 200;
+            this.coins = 120;
         }
         this.lastDraw = System.currentTimeMillis();
         this.firstDraw = System.currentTimeMillis();
@@ -661,7 +737,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.pause = 10000;
         this.gameTime = System.currentTimeMillis() + this.pause;
         this.delay = 0;
-        this.activeShips = 0;
+        this.activeShips = this.shipsCount;
+        this.paints[2].setAlpha(140);
+        this.paints[3].setAlpha(255);
+        this.paints[4].setAlpha(255);
         //editor.putString("level" + this.level, "");
         //editor.commit();
 
@@ -678,6 +757,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         this.activeShips--;
         if (activeShips == 0) {
             this.win = true;
+            sounds.play(winSound, 1.0f, 1.0f, 0, 0, 1.5f);
+            if (this.level + 1 > availableLevels) {
+                editor.putInt("availableLevels", availableLevels++);
+                editor.commit();
+            }
             this.gameTime = System.currentTimeMillis() - this.gameTime;
             this.playTime = getPlayTime(this.gameTime);
             this.newRecord = checkBestScores();
@@ -689,7 +773,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         long seconds = (gameTime  / 1000) % 60;
         long millis = ((gameTime  / 1000) % 60) & 100;
 
-        System.out.println("-----------------");
         return Long.toString(minutes) + ":" + Long.toString(seconds) + "." + Long.toString(millis);
     }
 
@@ -710,7 +793,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         else if (bestLives == this.hearts) {
             long bestTime = Long.parseLong(parseRecord(this.level)[1].trim());
-            if (bestTime < this.gameTime) {
+            if (this.gameTime < bestTime) {
                 editor.putString("level" + this.level, Integer.toString(this.hearts) + ";" + Long.toString(this.gameTime) + ";" + Integer.toString(this.coins));
                 editor.commit();
                 //this.newRecord = true;
@@ -732,7 +815,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public String[] parseRecord(int level) {
         String bestRecord = sp.getString("level" + level, "");
 
-        System.out.println(this.level + " " + bestRecord);
         if(bestRecord == ""){
             String[] newRecord = {""};
             return  newRecord;
@@ -743,7 +825,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     }
     /*
-    pridat zvuk
-    ukladani vysledku
+    nastavit zamek na levely
+    odladit
      */
 }

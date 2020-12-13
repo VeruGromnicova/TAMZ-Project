@@ -45,26 +45,26 @@ public class Ship {
         if (type == 0) {
             reward = 20;
             damage = 1;
-            lives = 5;
-            speed = 800;
+            lives = 3;
+            speed = 1200;
         }
         else if (type == 1) {
             reward = 30;
             damage = 1;
-            lives = 7;
-            speed = 800;
+            lives = 5;
+            speed = 1200;
         }
         else if (type == 2) {
-            reward = 40;
-            damage = 3;
-            lives = 7;
-            speed = 800;
+            reward = 30;
+            damage = 2;
+            lives = 6;
+            speed = 1200;
         }
         else {
-            reward = 0;
+            reward = 50;
             lives = 30;
             damage = 5;
-            speed = 1400;
+            speed = 2000;
         }
         pm = new PathMeasure(shipPath, false);
         fSegmentLen = pm.getLength() / this.speed;//we'll get 20 points from path to animate the circle
@@ -93,8 +93,8 @@ public class Ship {
             y = (int)afP[1];
             iCurStep++;
         } else {
-            iCurStep = 0;
             if (active) {
+                active = false;
                 this.gv.decreaseHearts(this.damage);
             }
         };
