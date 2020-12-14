@@ -145,12 +145,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     }
 
-    /*
-    SharedPreferences.Editor editor = sharedPreferences.edit();
-    editor.putString(keyString, valueString);
-    editor.commit();
-     */
-
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
@@ -309,10 +303,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawBitmap(bmp[5], screenWidth-(int)(screenWidth/9)-coinHeartTextSize, screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[2]);
             canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[3]);
             canvas.drawBitmap(bmp[14], screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[4]);
-
-            //canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[9]);
-            //canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[10]);
-            //canvas.drawBitmap(bmp[13], screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize), screenHeight-((int)(barHeight/1.8))-coinHeartTextSize, paints[11]);
 
             canvas.drawText(Integer.toString(pricesTower[0]), screenWidth-(int)(screenWidth/9)-(int)(coinHeartTextSize/2),screenHeight-20, paints[8]);
             canvas.drawText(Integer.toString(pricesTower[1]), screenWidth-(int)(screenWidth/9)-(int)(3.5*coinHeartTextSize),screenHeight-20, paints[8]);
@@ -474,9 +464,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         paints[2].setAlpha(140);
                         paints[3].setAlpha(255);
                         paints[4].setAlpha(255);
-                        //paints[9].setAlpha(100);
-                        //paints[10].setAlpha(0);
-                        //paints[11].setAlpha(0);
                         selectedTower = 0;
                     }
                     else if (displayX > screenWidth-(int)(screenWidth/9)-(4*coinHeartTextSize) && displayX < screenWidth-(int)(screenWidth/9)-(2*coinHeartTextSize) &&
@@ -484,9 +471,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         paints[2].setAlpha(255);
                         paints[3].setAlpha(140);
                         paints[4].setAlpha(255);
-                        //paints[9].setAlpha(0);
-                        //paints[10].setAlpha(100);
-                        //paints[11].setAlpha(0);
                         selectedTower = 1;
                     }
                     else if (displayX > screenWidth-(int)(screenWidth/9)-(7*coinHeartTextSize) && displayX < screenWidth-(int)(screenWidth/9)-(5*coinHeartTextSize) &&
@@ -494,9 +478,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         paints[2].setAlpha(255);
                         paints[3].setAlpha(255);
                         paints[4].setAlpha(140);
-                        //paints[9].setAlpha(0);
-                        //paints[10].setAlpha(0);
-                        //paints[11].setAlpha(100);
                         selectedTower = 2;
                     }
                 }
@@ -554,7 +535,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         bmp[17] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.boss), (int)(1.5*shipWidth), (int)(1.5*shipHeight), false);
 
         bmp[8] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.menubg), screenWidth, screenHeight, false);
-
         bmp[9] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.bar), screenWidth, barHeight, false);
 
         bmpBtns[0] = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.buttlevel1), 13*unitWidth, 6*unitHeight, false);
@@ -616,9 +596,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         paints[8].setColor(Color.BLACK);
         paints[8].setTextSize((int)(coinHeartTextSize*0.6));
         paints[8].setTypeface(typeface);
-        //paints[9].setAlpha(0);
-        //paints[10].setAlpha(0);
-        //paints[11].setAlpha(0);
 
         paints[12].setColor(Color.WHITE);
         paints[12].setTextSize(coinHeartTextSize);
@@ -824,8 +801,5 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
     }
-    /*
-    nastavit zamek na levely
-    odladit
-     */
+
 }
