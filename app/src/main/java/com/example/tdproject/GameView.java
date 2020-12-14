@@ -86,6 +86,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private SoundPool sounds;
     private int winSound;
     private int gameOverSound;
+    private int loseHeartSound;
     private MediaPlayer mediaPlayer;
     private int availableLevels;
 
@@ -134,7 +135,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         sounds = new SoundPool(10, AudioManager.STREAM_MUSIC,0);
         winSound = sounds.load(context, R.raw.win, 1);
         gameOverSound = sounds.load(context, R.raw.gameover, 1);
-
+        loseHeartSound = sounds.load(context, R.raw.loseheart, 1);
 
         mediaPlayer = MediaPlayer.create(context, R.raw.bgmusic);
         mediaPlayer.setLooping(true);
@@ -686,6 +687,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if(hearts < 1){
             sounds.play(gameOverSound, 1.0f, 1.0f, 0, 0, 1.5f);
             gameOver = true;
+        }
+        else {
+            sounds.play(loseHeartSound, 1.0f, 1.0f, 0, 0, 1.5f);
         }
     }
 
