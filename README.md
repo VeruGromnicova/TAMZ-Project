@@ -5,16 +5,41 @@
 ## Requirements
 
 git
+
 cmake
+
 g++
+
 wxWidgets
 
 ## wxWidgets Installation
 
-install libgtk-3
+install libgtk-3:
 ```bash
-pip install foobar
+sudo apt-get install libgtk-3-dev
 ```
+
+download source zip file and unzip it:
+```bash
+wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.5/wxWidgets-3.1.5.zip
+mkdir wxWidgets-3.1.5 && unzip file.zip -d wxWidgets-3.1.5
+```
+
+generate makefile:
+```bash
+cd wxWidgets-3.1.5
+cmake -DCMAKE_INSTALL_PREFIX=/opt/wxWidgets .
+sudo make install
+```
+
+## Building
+
+Download project and unzip it, then run the script for build.
+```bash
+cd imx85_isp/C_simulator/gui
+bash build9x.sh
+```
+
 
 --------------------------------------------
 # TAMZ-Project
