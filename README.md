@@ -25,7 +25,7 @@ wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.5/wxWidgets-3
 mkdir wxWidgets-3.1.5 && unzip file.zip -d wxWidgets-3.1.5
 ```
 
-generate makefile:
+generate makefile and install wxWidgets in the opt folder:
 ```bash
 cd wxWidgets-3.1.5
 cmake -DCMAKE_INSTALL_PREFIX=/opt/wxWidgets .
