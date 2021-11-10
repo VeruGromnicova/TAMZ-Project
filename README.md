@@ -1,7 +1,5 @@
 # Build
 
-...
-
 ## Requirements
 
 * git
