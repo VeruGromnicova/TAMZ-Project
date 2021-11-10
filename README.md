@@ -4,13 +4,10 @@
 
 ## Requirements
 
-git
-
-cmake
-
-g++
-
-wxWidgets
+* git
+* cmake
+* g++
+* wxWidgets
 
 ## wxWidgets Installation
 
