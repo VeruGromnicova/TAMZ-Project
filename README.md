@@ -1,3 +1,22 @@
+# Build
+
+...
+
+## Requirements
+
+git
+cmake
+g++
+wxWidgets
+
+## wxWidgets Installation
+
+install libgtk-3
+```bash
+pip install foobar
+```
+
+--------------------------------------------
 # TAMZ-Project
 
 ## Co je Tower Defence?
@@ -7,3 +26,4 @@ V tomto projektu budu implementovat hru tohoto druhu. Hra bude obsahovat mimo ji
 
 ## Finální podoba
 Hra k vykreslování využívá canvas, součástí je vlastní menu, po dokončení levelu se uloží pomocí Shared Preferences informace o tom, kterým levelem hráč skončil a také jaké jsou nejlepší výsledky pro každé kolo, mapy jsou vloženy jako celistvé obrázky, ale cesta pro útočící lodě je vypočítávána ze souboru maps.txt, stejně tak jako počet a druhy lodí, které mají daný level vyrazit. Hra také obsahuje audio a zvukové efekty.
+
