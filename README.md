@@ -1,3 +1,40 @@
+# Build
+
+## Requirements
+
+* git
+* cmake
+* g++
+* wxWidgets
+
+## wxWidgets Installation
+
+Install libgtk-3:
+```bash
+$ sudo apt-get install libgtk-3-dev
+```
+
+Download source zip file and unzip it:
+```bash
+$ wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.1.5/wxWidgets-3.1.5.zip
+$ mkdir wxWidgets-3.1.5 && unzip wxWidgets-3.1.5.zip -d wxWidgets-3.1.5
+```
+
+Generate makefile and install wxWidgets in the opt folder:
+```bash
+$ cd wxWidgets-3.1.5
+$ cmake -DCMAKE_INSTALL_PREFIX=/opt/wxWidgets .
+$ sudo make install
+```
+
+## Building
+
+Download project and unzip it, then run the script to build.
+```bash
+$ cd imx85_isp/C_simulator/gui
+$ bash build9x.sh
+```
+
 # TAMZ-Project
 
 ## Co je Tower Defence?
